@@ -1,15 +1,24 @@
-node_modules
-.DS_Store
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-build
-
+# --- Node ---
+node_modules/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+yarn.lock
+pnpm-lock.yaml
 
-package-lock.json
+# --- Build artifacts ---
+client/dist/
+server/dist/
+*.log
+
+# --- Env (secrets) ---
+.env
+*.env
+client/.env
+server/.env
+
+# --- OS cruft ---
+.DS_Store
+Thumbs.db
+
+# --- Editor ---
+.vscode/
+.idea/
