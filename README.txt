@@ -41,8 +41,7 @@ A full-stack barber appointment app with real-time slot availability, email conf
 
 ## 📁 Project Structure
 
-
-```
+```bash
 project-final/
 ├─ client/                 # React app (Vite)
 │  ├─ public/              # favicons, manifest, apple-touch-icon, logo.png
@@ -58,13 +57,15 @@ project-final/
 ```
 
 **Booking schema:**
+
+```js
 // Unique index prevents double-booking
 bookingSchema.index({ date: 1, time: 1 }, { unique: true });
 ```
 
 ---
 
-## Security
+## 🔒 Security
 
 - Admin JWT stored in **sessionStorage** (clears when closing the tab)
 - `helmet`, `cors` (restrict origin), `rate-limit`
@@ -73,7 +74,7 @@ bookingSchema.index({ date: 1, time: 1 }, { unique: true });
 
 ---
 
-## SEO & UX
+## 🌐 SEO & UX
 
 - Proper `<title>`, `meta description`, Open Graph, `site.webmanifest`
 - `apple-touch-icon.png` (180×180) in `client/public/`
@@ -82,7 +83,7 @@ bookingSchema.index({ date: 1, time: 1 }, { unique: true });
 
 ---
 
-## Troubleshooting
+## 🛠 Troubleshooting
 
 - **Admin login returns blank / no redirect**  
   Ensure `JWT_SECRET` is set in `server/.env`; restart the server; check `/api/auth/login` in DevTools → Network.
@@ -98,4 +99,3 @@ bookingSchema.index({ date: 1, time: 1 }, { unique: true });
 
 - **409 “Time already booked”**  
   Someone took that slot. Choose another.
----
