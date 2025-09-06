@@ -1,0 +1,38 @@
+<!-- client/index.html -->
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Bästa barbern – Boka</title>
+    <meta name="description" content="Boka klippning hos Bästa barbern. Skin fade, skägg, barnklippning och pensionärspriser. Enkelt bokningsflöde och snabb e-postbekräftelse." />
+    <link rel="canonical" href="http://localhost:5173/" />
+    <meta name="robots" content="index,follow" />
+    <meta property="og:title" content="Bästa barbern – Boka" />
+    <meta property="og:description" content="Boka klippning hos Bästa barbern. Skin fade, skägg, barnklippning och pensionärspriser." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/web-app-manifest-512x512.png" />
+    <meta property="og:url" content="http://localhost:5173/" />
+    <meta name="theme-color" content="#0ea5e9" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      // Starta i ljusläge om inget finns lagrat
+      (function () {
+        const saved = localStorage.getItem('theme');
+        const root = document.documentElement;
+        if (saved === 'dark') root.classList.add('dark');
+        else root.classList.remove('dark');
+      })();
+    </script>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

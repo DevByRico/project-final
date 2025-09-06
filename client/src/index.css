@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Grundlayout: ljus bakgrund i light, mörk i dark */
+html, body, #root {
+  height: 100%;
+}
+body {
+  @apply bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100;
+}
+
+/* Små hjälparklasser som används i koden */
+.card {
+  @apply bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow p-4;
+}
+.input {
+  @apply px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 outline-none;
+}
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700;
+}
+.muted {
+  @apply text-gray-600 dark:text-slate-400;
+}
