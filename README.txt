@@ -1,101 +1,235 @@
-# Barber Booking – Final Project
+# Bästa barbern — Booking System
 
-A full-stack barber appointment app with real-time slot availability, email confirmations (ICS calendar invite), and a protected admin dashboard.
+> A full‑stack barber appointment system with a smooth customer flow, self‑service booking, and a simple admin dashboard.
 
-**Live site:** https://barber-rico.netlify.app  
-**API (Render):** https://project-final-it0v.onrender.com
+**Live demo**
+- Client (Netlify): https://barber-rico.netlify.app  
+- API (Render): https://project-final-it0v.onrender.com
+- Repo: https://github.com/DevByRico/project-final
 
 ---
 
 ## ✨ Features
 
-- Fast client (Vite + React + Tailwind)
-- Dark/Light theme toggle (persistent)
-- Calendar with available time slots (30-min steps)
-- Booking flow with confirmation screen
-- Email confirmation with `.ics` calendar attachment
-- Admin dashboard (JWT protected): list, toggle status, delete bookings
-- Basic rate limiting, Helmet, and CORS
-- SEO & PWA essentials (favicons, manifest, social meta)
+- **Customer flow**
+  - Pick date/time in a responsive calendar.
+  - Enter details and confirm booking.
+  - Instant **email confirmation** with **.ics** calendar invite.
+- **Admin**
+  - Login with email + password (JWT in `sessionStorage`).
+  - List bookings, mark **done/undone**, **delete**, guarded by `ProtectedRoute`.
+- **Duplicate-booking protection** — server schema enforces unique `(date, time)`.
+- **Dark mode** with a clean Tailwind design.
+- **Mobile-first** + accessible controls (labels, roles, focus states).
+- **SEO & PWA basics** — titles, meta tags, favicon set, sitemap/robots (optional).
 
 ---
 
-## 🧱 Tech Stack
+## 🛠 Tech Stack
 
 **Frontend**
-- React, React Router
+- React + React Router
 - Tailwind CSS
 - Vite
 
 **Backend**
-- Node.js, Express
-- MongoDB (Mongoose)
+- Node.js + Express
+- MongoDB + Mongoose
 - Nodemailer (Mailtrap in dev)
-- JWT auth
-
-**Hosting**
-- Frontend: Netlify
-- Backend: Render
+- Helmet, CORS, Rate-limit, JWT
 
 ---
 
 ## 📁 Project Structure
 
-```bash
+```
 project-final/
-├─ client/                 # React app (Vite)
-│  ├─ public/              # favicons, manifest, apple-touch-icon, logo.png
-│  ├─ src/
-│  │  ├─ components/       # Header, ThemeToggle, ProtectedRoute, ...
-│  │  ├─ pages/            # SelectTime, DetailsPage, ConfirmPage, Admin*
-│  │  ├─ brand.js, lib.js, main.jsx, App.jsx, index.css, ...
-│  └─ index.html
-└─ server/                 # Express API
-   ├─ index.js             # API routes, mail, DB
-   ├─ package.json
-   └─ .env                 # 🔒 private environment variables (not in git)
+├── client/               # Frontend (Vite + React)
+│   ├── public/           # static assets, _redirects for SPA
+│   └── src/
+│       ├── components/   # Header, ThemeToggle, ProtectedRoute
+│       ├── pages/        # SelectTime, DetailsPage, ConfirmPage, Admin*
+│       ├── brand.js      # Title helper + branding
+│       ├── lib.js        # fetch wrapper (api)
+│       └── index.css     # Tailwind + theme tokens
+└── server/               # Backend (Express)
+    ├── index.js          # API server
+    └── .env              # server secrets (NOT committed)
 ```
 
-**Booking schema:**
+---
 
+## 🚀 Quick Start (Local)
+
+### Prerequisites
+- Node 18+ (recommended)
+- A MongoDB connection string (Atlas works fine)
+
+### 1) Clone & install
+```bash
+git clone https://github.com/DevByRico/project-final.git
+cd project-final
+
+# client
+cd client
+npm install
+cd ..
+
+# server
+cd server
+npm install
+```
+
+### 2) Configure server environment
+Create `server/.env` (do **not** commit this file):
+
+```ini
+# ----- MongoDB -----
+MONGODB_URI=your-mongodb-uri
+PORT=5000
+CLIENT_URL=http://localhost:5173
+
+# ----- Admin login -----
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=changeme
+JWT_SECRET=replace-with-a-long-random-string
+
+# ----- Dev email (Mailtrap sandbox) -----
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=xxxxxxxxxxxxxx
+SMTP_PASS=xxxxxxxxxxxxxx
+FROM_EMAIL="Bokningsappen <noreply@example.com>"
+
+# ----- Optional barber notifications -----
+BARBER_EMAIL=barber@example.com
+BARBER_WHATSAPP=
+WHATSAPP_TOKEN=
+WHATSAPP_PHONE_ID=
+```
+
+### 3) Run locally
+**Terminal 1 – API**
+```bash
+cd server
+npm run dev
+# -> http://localhost:5000
+```
+
+**Terminal 2 – Client**
+```bash
+cd client
+npm run dev
+# -> http://localhost:5173
+```
+
+The client uses `client/src/lib.js` which sets:
 ```js
-// Unique index prevents double-booking
-bookingSchema.index({ date: 1, time: 1 }, { unique: true });
+export const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.DEV ? 'http://localhost:5000' : '');
 ```
+So in development it hits `http://localhost:5000` automatically.
 
 ---
 
-## 🔒 Security
+## ☁️ Deployment
 
-- Admin JWT stored in **sessionStorage** (clears when closing the tab)
-- `helmet`, `cors` (restrict origin), `rate-limit`
-- Unique DB index on `date+time` to stop double-booking
-- **Never commit `.env`** — include a `.env.example` with placeholders instead
+### 1) Backend (Render)
+- Create a **Web Service** from `server/`.
+- **Build command**: `npm install`
+- **Start command**: `node index.js`
+- **Environment**: Add all keys from `server/.env` (except `CLIENT_URL` if not needed).
+- After deploy, note your **Render URL**, e.g.  
+  `https://project-final-xxxx.onrender.com`
+
+### 2) Frontend (Netlify)
+- New site → **Import from Git** → repo root.
+- **Base directory**: `client`
+- **Build command**: `npm ci && npm run build`
+- **Publish directory**: `client/dist`
+- Add environment variable:
+  - **Key**: `VITE_API_BASE`
+  - **Value**: your Render URL (e.g. `https://project-final-xxxx.onrender.com`)
+- Ensure SPA redirects in `client/public/_redirects`:
+  ```text
+  /*  /index.html  200
+  ```
+- Redeploy site.
 
 ---
 
-## 🌐 SEO & UX
+## 🔌 API Reference
 
-- Proper `<title>`, `meta description`, Open Graph, `site.webmanifest`
-- `apple-touch-icon.png` (180×180) in `client/public/`
-- Keep brand images in `public/` (e.g. `/logo.png`)
-- Good contrast in dark mode; semantic HTML
+All endpoints are relative to `API_BASE` (local: `http://localhost:5000`).
+
+### Health
+`GET /api/health` → `{ ok: true }`
+
+### Auth
+- `POST /api/auth/login`
+  - Body: `{ "email": "...", "password": "..." }`
+  - Returns: `{ token }` (store in **sessionStorage**)
+- `GET /api/auth/me` (Bearer token) → `{ ok: true, email }`
+
+### Slots
+- `GET /api/slots?date=YYYY-MM-DD`
+  - Returns: `{ date, available: string[], booked: string[] }`
+
+### Bookings
+- `POST /api/bookings`
+  - Body: `{ name, email, phone, date, time, service }`
+  - Creates booking; emails confirmation with `.ics` invite.
+- `GET /api/bookings` (admin)
+- `PATCH /api/bookings/:id/toggle` (admin) — toggle `confirmed/done`
+- `DELETE /api/bookings/:id` (admin)
+
+> Duplicate protection is enforced at the database level via a **unique index**:
+> ```js
+> bookingSchema.index({ date: 1, time: 1 }, { unique: true });
+> ```
+> If a slot is already taken, the server responds with **409 Conflict**.
 
 ---
 
-## 🛠 Troubleshooting
+## 🔐 Security Notes
 
-- **Admin login returns blank / no redirect**  
-  Ensure `JWT_SECRET` is set in `server/.env`; restart the server; check `/api/auth/login` in DevTools → Network.
+- `helmet()` adds sensible HTTP headers.
+- `cors()` is restricted to your `CLIENT_URL` (in dev: `http://localhost:5173`).
+- Rate limiting: `express-rate-limit` (defaults: 300 req / 15 min).
+- JWT auth for admin routes (token lives in `sessionStorage`).
+- Never commit `.env` — it’s in `.gitignore`.
 
-- **CORS errors**  
-  `CLIENT_URL` must match the client origin (e.g. `http://localhost:5173`).
+---
 
-- **MongoDB “EBADNAME / <cluster>”**  
-  Replace placeholder `<cluster>` with the real cluster host in `MONGODB_URI`.
+## ♿ Accessibility & 🧠 SEO
 
-- **Emails not arriving**  
-  Use Mailtrap **Sandbox** in dev; for production use `live.smtp.mailtrap.io:587` with `SMTP_USER=api` and your `SMTP_PASS` (API token). Avoid free Gmail “from” without SPF/DKIM.
+- Semantic HTML, associated labels, roles, keyboard focus.
+- Page titles via `brand.js` (`setTitle(...)`).
+- Favicons & manifest in `client/public/`.
+- Optional `robots.txt` & `sitemap.xml` can be added to `public/`.
 
-- **409 “Time already booked”**  
-  Someone took that slot. Choose another.
+---
+
+## 🧩 Troubleshooting
+
+**MongoDB error `EBADNAME`**  
+Check `MONGODB_URI` – it must be a valid connection string (Atlas SRV format usually starts with `mongodb+srv://…`).
+
+**401 Unauthorized (admin pages)**  
+Make sure you log in with `ADMIN_EMAIL/ADMIN_PASSWORD`. Token is saved in `sessionStorage`. Protected routes call `/api/auth/me` on load.
+
+**409 Conflict on booking**  
+The slot is already taken (unique index). Pick another time.
+
+**Emails not arriving**  
+Use Mailtrap sandbox creds in dev. For production, add real SMTP credentials.
+
+**Netlify deploy works but API doesn’t**  
+Confirm `VITE_API_BASE` on Netlify matches your Render API URL and redeploy.
+
+---
+
+## 📝 License
+
+MIT © 2025 DevByRico
