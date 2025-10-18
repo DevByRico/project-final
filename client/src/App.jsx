@@ -7,33 +7,27 @@ import DetailsPage from "./pages/DetailsPage";
 import Confirmation from "./pages/ConfirmationPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import LoginPage from "./pages/LoginPage";
-import { BookingProvider } from "./store/booking";
-import { AuthProvider } from "./store/auth";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <BookingProvider>
-          <Header />
-          <Routes>
-            <Route path="/" element={<SelectTime />} />
-            <Route path="/details" element={<DetailsPage />} />
-            <Route path="/confirmation" element={<Confirmation />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<p className="p-4">Not found.</p>} />
-          </Routes>
-        </BookingProvider>
-      </AuthProvider>
+      <Header />
+      <Routes>
+        <Route path="/" element={<SelectTime />} />
+        <Route path="/details" element={<DetailsPage />} />
+        <Route path="/confirmation" element={<Confirmation />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<p className="p-4">Not found.</p>} />
+      </Routes>
     </BrowserRouter>
   );
 }
