@@ -1,5 +1,5 @@
 export const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export async function api(path, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
