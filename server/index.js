@@ -13,10 +13,31 @@ dotenv.config();
 
 // ---- App setup ----
 const app = express();
-app.set("trust proxy", 1); // ✅ Fix for Render proxy warning
+app.set("trust proxy", true); // ✅ final fix for Render proxy warning
 
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+// ---- Bas-middleware ----
+app.use(helmet());
+app.use(
+  cors({
+    origin: [CLIENT_URL, "http://localhost:5173", "http://localhost:5000"],
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "10kb" }));
+
+// ---- Rate limiting ----
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 min
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+
 
 
 // Bas-middleware
