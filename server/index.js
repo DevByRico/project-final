@@ -20,9 +20,9 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 app.use(helmet());
 app.use(
   cors({
-    origin: [CLIENT_URL, "http://localhost:5173", "http://localhost:5000"],
-    credentials: true,
-  })
+  origin: [CLIENT_URL, "http://localhost:5173", "http://localhost:5000"],
+  credentials: true,
+}),
 );
 app.use(express.json({ limit: "10kb" }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
@@ -168,6 +168,8 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 // Fixad login: trim + lowercase jämförelse + bättre fel
 app.post("/api/auth/login", (req, res) => {
+  console.log("Login attempt:", req.body); // ✅ rätt sätt att logga body
+
   const email = String(req.body?.email || "").trim().toLowerCase();
   const password = String(req.body?.password || "").trim();
 
@@ -186,6 +188,7 @@ app.post("/api/auth/login", (req, res) => {
     );
     return res.json({ token });
   }
+
   return res.status(401).json({ message: "Fel e-post eller lösenord." });
 });
 

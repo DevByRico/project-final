@@ -1,18 +1,29 @@
+// src/components/ThemeToggle.jsx
+import React, { useEffect, useState } from "react";
+
 export default function ThemeToggle() {
-  function toggle() {
-    const root = document.documentElement
-    const isDark = root.classList.toggle('dark')
-    localStorage.setItem('theme', isDark ? 'dark' : 'light')
-  }
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDark) {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
+
   return (
     <button
-      type="button"
-      onClick={toggle}
-      className="px-2 py-1 rounded border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800"
-      aria-label="Växla tema"
-      title="Växla tema"
+      onClick={() => setIsDark(!isDark)}
+      className="text-2xl p-2 rounded hover:bg-gray-200 dark:hover:bg-slate-700 transition"
+      title={isDark ? "Byt till ljust läge" : "Byt till mörkt läge"}
     >
-      🌓
+      {isDark ? "🌙" : "☀️"}
     </button>
-  )
+  );
 }

@@ -1,21 +1,18 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App.jsx'
-import './index.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
 
-// Initierar tema (default: light)
-(function () {
-  const saved = localStorage.getItem('theme') // 'dark' | 'light' | null
-  const root = document.documentElement
-  if (saved === 'dark') root.classList.add('dark')
-  else root.classList.remove('dark')
-})()
+// dina providers
+import { AuthProvider } from "./store/auth";
+import { BookingProvider } from "./store/booking";
 
-createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <AuthProvider>
+      <BookingProvider>
+        <App />
+      </BookingProvider>
+    </AuthProvider>
   </React.StrictMode>
-)
+);

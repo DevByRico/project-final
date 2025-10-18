@@ -1,97 +1,122 @@
-import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { api } from '../lib.js'
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { api } from "../store/lib";
 
-export default function DetailsPage(){
-  const { state } = useLocation() || {}
-  const navigate = useNavigate()
-  const [name, setName] = React.useState('')
-  const [email, setEmail] = React.useState('')
-  const [phone, setPhone] = React.useState('')
-  const [service, setService] = React.useState('Skin fade (300 kr)')
-  const [other, setOther] = React.useState('')
-  const [error, setError] = React.useState('')
+export default function DetailsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const selected = location.state; // date, time, service
 
-  if(!state?.date || !state?.time){
-    return <p className="muted">Ingen tid vald. Gå tillbaka.</p>
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [service, setService] = useState(selected?.service || "Fade");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if (!selected?.date || !selected?.time) {
+    return (
+      <div className="text-center mt-10">
+        <p>Please select a date and time first.</p>
+      </div>
+    );
   }
 
-  async function submit(e){
-    e.preventDefault(); setError('')
-    const chosenService = service === 'Övrigt' ? `Övrigt: ${other}` : service
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    try{
-      const resp = await api('/api/bookings', {
-        method:'POST',
-        body: { name, email, phone, date: state.date, time: state.time, service: chosenService }
-      })
+    try {
+      await api("/api/bookings", {
+        method: "POST",
+        body: {
+          name,
+          email,
+          phone,
+          date: selected.date,
+          time: selected.time,
+          service,
+        },
+      });
 
-      navigate('/confirm', { state: { ok: true, mailOk: !!resp?.mailOk } })
-    }catch(e){
-      setError(e.message)
+      navigate("/confirmation", { state: { name, date: selected.date, time: selected.time, service } });
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <section className="grid grid-cols-1 gap-6">
-      <form onSubmit={submit} className="card p-4 sm:p-6 space-y-4">
-        <h1 className="text-xl font-semibold">Dina uppgifter</h1>
+    <div className="flex justify-center items-center min-h-[80vh] px-4">
+      <div className="card w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-4 text-center">Booking Details</h1>
+        <p className="muted text-center mb-6">
+          You’re booking <strong>{service}</strong> on{" "}
+          <strong>{selected.date}</strong> at <strong>{selected.time}</strong>.
+        </p>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <label className="flex flex-col gap-1">
-            <span className="font-medium">Namn</span>
-            <input className="input" value={name} onChange={e=>setName(e.target.value)} required />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-medium">E-post</span>
-            <input type="email" className="input" value={email} onChange={e=>setEmail(e.target.value)} required />
-          </label>
-          <label className="flex flex-col gap-1 sm:col-span-2">
-            <span className="font-medium">Telefon</span>
-            <input className="input" value={phone} onChange={e=>setPhone(e.target.value)} required />
-          </label>
-        </div>
-
-        <div className="space-y-2">
-          <span className="font-medium">Välj tjänst</span>
-          <div className="grid sm:grid-cols-2 gap-2">
-            {[
-              'Skin fade (300 kr)',
-              'Skin fade & skägg (400 kr)',
-              'Barnklippning (250 kr)',
-              'Pensionär (230 kr)',
-              'Övrigt'
-            ].map(opt => (
-              <label key={opt}
-                     className="flex items-center gap-2 rounded-lg border
-                                border-gray-200 dark:border-slate-700
-                                bg-white dark:bg-slate-800 px-3 py-2">
-                <input
-                  type="radio"
-                  name="service"
-                  value={opt}
-                  checked={service === opt}
-                  onChange={() => setService(opt)}
-                />
-                <span>{opt}</span>
-              </label>
-            ))}
-          </div>
-
-          {service === 'Övrigt' && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium">Full Name</label>
             <input
-              placeholder="Skriv önskemål…"
-              className="input mt-2"
-              value={other}
-              onChange={e=>setOther(e.target.value)}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="input"
+              placeholder="Your full name"
               required
             />
-          )}
-        </div>
+          </div>
 
-        <button className="btn">Bekräfta bokning</button>
-        {error && <p className="text-red-400">{error}</p>}
-      </form>
-    </section>
-  )
+          <div>
+            <label className="block mb-1 font-medium">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Phone Number</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="input"
+              placeholder="+46 70 123 45 67"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Service</label>
+            <select
+              value={service}
+              onChange={(e) => setService(e.target.value)}
+              className="input"
+            >
+              <option>Fade</option>
+              <option>Fade + Beard</option>
+              <option>Fade + Color</option>
+            </select>
+          </div>
+
+          {error && (
+            <p className="text-center text-red-500 text-sm">{error}</p>
+          )}
+
+          <button type="submit" className="btn w-full" disabled={loading}>
+            {loading ? "Booking..." : "Confirm Booking"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }

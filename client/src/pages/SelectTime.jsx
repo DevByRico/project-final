@@ -1,162 +1,197 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '../lib.js'
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import dayjs from "dayjs";
+import "dayjs/locale/en";
+import { useBooking } from "../store/booking";
+import { api } from "../store/lib";
 
-const BRAND = import.meta.env.VITE_BRAND_NAME || 'Bästa barbern'
-const LOGO  = import.meta.env.VITE_LOGO_URL || '/logo.png' // public
+dayjs.locale("en");
 
-function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1) }
-function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0) }
-function fmtISO(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${da}` }
+const ALL_TIMES = [
+  "10:00","10:30","11:00","11:30",
+  "12:00","12:30","13:00","13:30",
+  "14:00","14:30","15:00","15:30",
+  "16:00","16:30","17:00","17:30",
+  "18:00","18:30"
+];
 
-function MonthGrid({ monthDate, selectedDate, onPick }) {
-  const first = startOfMonth(monthDate)
-  const last = endOfMonth(monthDate)
-  const startIdx = (first.getDay()+6)%7
-  const days = []
-  for (let i=0;i<startIdx;i++) days.push(null)
-  for (let d=1; d<=last.getDate(); d++) days.push(new Date(monthDate.getFullYear(), monthDate.getMonth(), d))
+export default function SelectTime() {
+  const navigate = useNavigate();
+  const { setSelectedBooking: setBooking } = useBooking();
 
-  const labels = ['Må','Ti','On','To','Fr','Lö','Sö']
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState("");
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [error, setError] = useState("");
+
+  const tz = useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    []
+  );
+
+  const dateString = useMemo(
+    () => dayjs(selectedDate).format("YYYY-MM-DD"),
+    [selectedDate]
+  );
+
+  // Disable past days
+  const isDateDisabled = ({ date }) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d < today;
+  };
+
+  // Fetch available slots from backend when date changes
+  useEffect(() => {
+    let ignore = false;
+    async function loadSlots() {
+      setLoadingSlots(true);
+      setError("");
+      setSelectedTime("");
+      try {
+        const res = await api(`/api/slots?date=${dateString}`);
+        if (!ignore) {
+          // res.available = times that are free
+          setAvailableTimes(res?.available || []);
+        }
+      } catch (e) {
+        if (!ignore) {
+          setAvailableTimes([]);
+          setError(e.message || "Failed to load available times.");
+        }
+      } finally {
+        if (!ignore) setLoadingSlots(false);
+      }
+    }
+    loadSlots();
+    return () => { ignore = true; };
+  }, [dateString]);
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedTime) return;
+    setBooking({ date: dateString, time: selectedTime });
+    navigate("/details", { state: { date: dateString, time: selectedTime } });
+  };
 
   return (
-    <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
-      {labels.map(lbl => <div key={lbl} className="text-[11px] sm:text-xs text-gray-600 dark:text-slate-400">{lbl}</div>)}
-      {days.map((d,idx)=>{
-        if(!d) return <div key={idx}/>
-        const iso = fmtISO(d)
-        const selected = selectedDate && fmtISO(selectedDate)===iso
-        const past = d < new Date(new Date().toDateString())
-        return (
-          <button
-            key={iso}
-            disabled={past}
-            onClick={()=>onPick(d)}
-            className={[
-              "aspect-square rounded-lg border text-sm sm:text-base",
-              "border-gray-200 dark:border-slate-700",
-              past
-                ? "bg-gray-100 dark:bg-slate-900 text-gray-400 cursor-not-allowed"
-                : selected
-                  ? "bg-blue-600 text-white"
-                  : "bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700"
-            ].join(" ")}
-            aria-label={iso}
-          >
-            {d.getDate()}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-export default function SelectTime(){
-  const navigate = useNavigate()
-  const [month, setMonth] = useState(()=>{ const n=new Date(); n.setHours(0,0,0,0); return n })
-  const [pickedDate, setPickedDate] = useState(()=>{ const n=new Date(); n.setHours(0,0,0,0); return n })
-  const [slots, setSlots] = useState([])
-  const [booked, setBooked] = useState(new Set())
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  useEffect(()=>{
-    const iso = fmtISO(pickedDate)
-    setLoading(true); setError('')
-    api(`/api/slots?date=${iso}`)
-      .then(d => { setSlots(d.available); setBooked(new Set(d.booked)) })
-      .catch(e => setError(e.message))
-      .finally(()=>setLoading(false))
-  }, [pickedDate])
-
-  function toPrev(){ const m=new Date(month); m.setMonth(m.getMonth()-1); setMonth(m) }
-  function toNext(){ const m=new Date(month); m.setMonth(m.getMonth()+1); setMonth(m) }
-  function proceed(time){ navigate('/details', { state: { date: fmtISO(pickedDate), time } }) }
-
-  const monthName = month.toLocaleDateString('sv-SE',{month:'long'})
-  const yearStr = month.getFullYear()
-  const headerLabel = useMemo(
-    ()=> pickedDate.toLocaleDateString('sv-SE',{ weekday:'long', year:'numeric', month:'long', day:'numeric' }),
-    [pickedDate]
-  )
-
-  return (
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-      <aside className="card space-y-4">
-        <div className="flex items-center gap-3">
-          <img
-            src={LOGO}
-            alt={`${BRAND} logo`}
-            className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-lg"
-            onError={(e)=>{ e.currentTarget.style.display='none' }}
-          />
-          <div>
-            <div className="text-xs sm:text-sm text-gray-500">BÄSTA</div>
-            <h2 className="text-lg sm:text-xl font-semibold">{BRAND}</h2>
-          </div>
-        </div>
-
-        <div className="text-sm">
-          <div className="font-medium mb-1 sm:mb-2">Vald dag</div>
-          <div className="capitalize">{headerLabel}</div>
-          <p className="mt-2 muted">
-            Välj först datum och tid. Du väljer tjänst på nästa sida.
-          </p>
-        </div>
-      </aside>
-
-      <div className="card">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
-          <div className="flex items-center justify-between sm:justify-start gap-2">
-            <button onClick={toPrev}
-              className="w-8 h-8 flex items-center justify-center rounded-lg
-                         border border-gray-200 dark:border-slate-700
-                         bg-white dark:bg-slate-800">‹</button>
-
-            <div className="leading-tight">
-              <div className="font-semibold text-base sm:text-lg capitalize">{monthName}</div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-slate-400">{yearStr}</div>
+    <section className="max-w-6xl mx-auto px-4 py-10">
+      {/* two-column cards like image #1 */}
+      <form
+        onSubmit={onSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
+      >
+        {/* Left card — brand + selected info */}
+        <div className="card">
+          <div className="flex items-center gap-3 mb-4">
+            <img
+              src="/logo.png"
+              alt="Best Barber logo"
+              className="h-12 w-12 rounded-full"
+            />
+            <div>
+              <div className="text-xs uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                BEST
+              </div>
+              <h2 className="text-xl font-semibold">Best Barber</h2>
             </div>
-
-            <button onClick={toNext}
-              className="w-8 h-8 flex items-center justify-center rounded-lg
-                         border border-gray-200 dark:border-slate-700
-                         bg-white dark:bg-slate-800">›</button>
           </div>
 
-          <div className="text-xs sm:text-sm muted">
-            Tidszon:&nbsp;<span className="font-medium">{Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
+          <div className="space-y-2">
+            <h3 className="font-semibold">Selected day</h3>
+            <p className="text-sm">
+              {dayjs(selectedDate).format("dddd D MMMM YYYY")}
+            </p>
+            <p className="muted text-sm">
+              First choose a date and time. You’ll select the service on the next
+              page.
+            </p>
+            {selectedTime && (
+              <p className="text-sm">
+                <span className="font-medium">Time:</span> {selectedTime}
+              </p>
+            )}
           </div>
         </div>
 
-        <MonthGrid monthDate={month} selectedDate={pickedDate} onPick={setPickedDate} />
-
-        <h3 className="mt-4 sm:mt-6 mb-2 font-medium">Lediga tider</h3>
-        {loading ? <p>Laddar…</p> : error ? <p className="text-red-500">{error}</p> : (
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-            {slots.length === 0 && <p className="text-sm muted col-span-full">Inga tider denna dag.</p>}
-            {slots.map(t => {
-              const unavailable = booked.has(t)
-              return (
-                <button
-                  key={t}
-                  disabled={unavailable}
-                  onClick={()=>proceed(t)}
-                  className={[
-                    "py-2 rounded-lg border text-sm sm:text-base",
-                    "border-gray-200 dark:border-slate-700",
-                    unavailable
-                      ? "bg-gray-100 dark:bg-slate-900 text-gray-400 cursor-not-allowed"
-                      : "bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700"
-                  ].join(" ")}
-                >
-                  {t}
-                </button>
-              )
-            })}
+        {/* Right card — calendar + timezone + times */}
+        <div className="card">
+          {/* Header row (month header is inside Calendar; we add tz to the right) */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-base font-semibold">
+              {dayjs(selectedDate).format("MMMM")}{" "}
+              <span className="text-gray-500 dark:text-slate-400">
+                {dayjs(selectedDate).format("YYYY")}
+              </span>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-slate-400">
+              Time zone: <span className="font-medium">{tz}</span>
+            </div>
           </div>
-        )}
-      </div>
+
+          <Calendar
+            onChange={setSelectedDate}
+            value={selectedDate}
+            tileDisabled={isDateDisabled}
+            locale="en"
+            className="mb-4"
+          />
+
+          <div className="mt-2">
+            <h4 className="font-semibold mb-2">Available times</h4>
+
+            {loadingSlots && (
+              <p className="text-sm text-gray-500 dark:text-slate-400">Loading…</p>
+            )}
+            {error && (
+              <p className="text-sm text-red-500 mb-2">{error}</p>
+            )}
+
+            {!loadingSlots && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {ALL_TIMES.map((time) => {
+                  const isAvailable = availableTimes.includes(time);
+                  const isSelected = selectedTime === time;
+                  return (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => isAvailable && setSelectedTime(time)}
+                      disabled={!isAvailable}
+                      className={[
+                        "rounded-lg border px-4 py-2 text-sm font-medium transition",
+                        "disabled:opacity-40 disabled:cursor-not-allowed",
+                        isSelected
+                          ? "bg-blue-600 text-white border-transparent"
+                          : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-slate-700"
+                      ].join(" ")}
+                    >
+                      {time}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className={[
+              "btn w-full mt-6",
+              !selectedTime ? "opacity-60 cursor-not-allowed" : ""
+            ].join(" ")}
+            disabled={!selectedTime}
+          >
+            Next
+          </button>
+        </div>
+      </form>
     </section>
-  )
+  );
 }

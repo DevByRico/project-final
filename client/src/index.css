@@ -2,15 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Grundlayout: ljus bakgrund i light, mörk i dark */
+/* === Base Layout === */
 html, body, #root {
   height: 100%;
 }
 body {
-  @apply bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100;
+  @apply bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300;
 }
 
-/* Små hjälparklasser som används i koden */
+/* === Fade-in Animation for Header === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* === Utilities === */
 .card {
   @apply bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow p-4;
 }
@@ -18,8 +27,189 @@ body {
   @apply px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 outline-none;
 }
 .btn {
-  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700;
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition;
 }
 .muted {
   @apply text-gray-600 dark:text-slate-400;
+}
+textarea {
+  @apply w-full p-4 min-h-[160px] border border-gray-300 rounded-md bg-white text-black resize-y dark:bg-gray-700 dark:text-white dark:border-gray-600;
+}
+
+/* === React Calendar === */
+.react-calendar {
+  @apply w-full max-w-lg mx-auto bg-white dark:bg-slate-800 rounded-2xl p-4 
+  text-gray-900 dark:text-slate-100 shadow-md border border-gray-200 dark:border-slate-700 transition-all;
+}
+
+/* Responsiv fix */
+@media (max-width: 640px) {
+  .react-calendar {
+    @apply max-w-full text-sm p-3;
+  }
+}
+
+/* === Navigation === */
+.react-calendar__navigation {
+  @apply flex justify-between items-center mb-4;
+}
+.react-calendar__navigation button {
+  @apply text-gray-700 dark:text-gray-200 text-sm font-medium bg-transparent rounded-md px-3 py-1 transition;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.react-calendar__navigation button:hover {
+  @apply text-blue-500 dark:text-blue-400;
+  filter: drop-shadow(0 0 4px rgba(59,130,246,0.4));
+}
+.react-calendar__navigation button:disabled {
+  @apply opacity-40 cursor-not-allowed text-gray-400 dark:text-slate-500;
+}
+
+/* === Weekdays === */
+.react-calendar__month-view__weekdays {
+  @apply text-xs text-gray-500 dark:text-slate-400 uppercase font-semibold mb-1 text-center;
+}
+
+/* === Dates === */
+.react-calendar__tile {
+  @apply text-sm rounded-lg p-2 text-center transition-all bg-gray-50 dark:bg-slate-700 text-gray-700 dark:text-slate-100 hover:bg-blue-100 dark:hover:bg-slate-600;
+}
+.react-calendar__tile--now {
+  @apply bg-blue-100 dark:bg-slate-600 font-semibold;
+}
+.react-calendar__tile--active {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+.react-calendar__tile:focus {
+  outline: none;
+  @apply ring-2 ring-blue-400 dark:ring-blue-500;
+}
+.react-calendar__month-view__days__day--neighboringMonth {
+  @apply text-gray-400 dark:text-slate-500;
+}
+
+/* === Month & Year view tiles === */
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year,
+.react-calendar__century-view__decades__decade {
+  @apply text-sm sm:text-base rounded-lg py-3 px-2 flex items-center justify-center transition-all bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-slate-100 hover:bg-blue-100 dark:hover:bg-slate-600;
+}
+.react-calendar__year-view__months,
+.react-calendar__decade-view__years,
+.react-calendar__century-view__decades {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+.react-calendar__tile--active:enabled,
+.react-calendar__year-view__months__month--active {
+  @apply bg-blue-600 text-white font-semibold hover:bg-blue-700;
+}
+
+/* === Time Slot Buttons === */
+.time-slot-grid {
+  @apply grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4;
+}
+.time-slot-btn {
+  @apply border border-gray-400 dark:border-slate-600 rounded-lg py-2 text-sm font-medium text-gray-800 dark:text-slate-100 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 transition;
+}
+
+/* === FINAL FIX for Arrow Highlight Bug === */
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus,
+.react-calendar__navigation button:enabled:active {
+  background: none !important;
+  color: #60a5fa !important;
+  filter: drop-shadow(0 0 4px rgba(96,165,250,0.4));
+  outline: none !important;
+  box-shadow: none !important;
+  transform: scale(0.96);
+}
+.react-calendar__navigation button:enabled {
+  background-color: transparent !important;
+}
+
+/* === FINAL RESPONSIVE FIX for Month/Year Layout === */
+.react-calendar__viewContainer {
+  display: flex;
+  justify-content: center;
+}
+.react-calendar__year-view__months,
+.react-calendar__decade-view__years,
+.react-calendar__century-view__decades {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+/* === MOBILE CALENDAR FIX === */
+@media (max-width: 480px) {
+  .react-calendar {
+    @apply w-full max-w-[95%] mx-auto text-sm p-3 rounded-xl bg-white dark:bg-slate-800 shadow-md;
+  }
+
+  .react-calendar__navigation {
+    @apply text-sm mb-2 justify-between;
+  }
+
+  .react-calendar__navigation button {
+    @apply px-2 py-1 text-xs;
+  }
+
+  .react-calendar__month-view__weekdays {
+    @apply text-[10px] font-medium tracking-tight mb-1;
+  }
+
+  .react-calendar__tile {
+    @apply text-xs p-2 rounded-md;
+  }
+
+  .react-calendar__tile--active {
+    @apply bg-blue-600 text-white font-semibold;
+  }
+
+  .react-calendar__month-view__days {
+    @apply grid gap-[3px];
+  }
+
+  .time-slot-grid {
+    @apply grid grid-cols-2 gap-2 mt-3;
+  }
+
+  .time-slot-btn {
+    @apply text-xs py-2;
+  }
+}
+
+/* === MOBILE HEADER FIX === */
+@media (max-width: 480px) {
+  header {
+    @apply flex-col items-center text-center gap-2;
+  }
+
+  header a {
+    @apply text-base;
+  }
+
+  header div {
+    @apply flex justify-center gap-3;
+  }
+
+  header img {
+    @apply mx-auto;
+  }
+
+  header span {
+    @apply text-sm;
+  }
+
+  /* Förhindra radbrytning i loggan */
+  header a span {
+    white-space: nowrap;
+  }
 }

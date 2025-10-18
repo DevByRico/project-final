@@ -1,19 +1,28 @@
 # --- Node ---
 node_modules/
-npm-debug.log*
-yarn.lock
-pnpm-lock.yaml
+**/node_modules/
 
 # --- Build artifacts ---
+dist/
+build/
 client/dist/
 server/dist/
+**/dist/
 *.log
 
 # --- Env (secrets) ---
 .env
 *.env
+**/.env
+**/*.env
+.env.local
 client/.env
 server/.env
+
+# --- Package locks ---
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # --- OS cruft ---
 .DS_Store
@@ -22,3 +31,13 @@ Thumbs.db
 # --- Editor ---
 .vscode/
 .idea/
+
+# --- Vite cache ---
+.vite/
+**/.vite/
+
+# --- Test coverage ---
+coverage/
+
+# --- Misc ---
+*.local
