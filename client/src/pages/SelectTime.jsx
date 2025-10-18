@@ -10,17 +10,16 @@ import { api } from "../store/lib";
 dayjs.locale("en");
 
 const ALL_TIMES = [
-  "10:00","10:30","11:00","11:30",
-  "12:00","12:30","13:00","13:30",
-  "14:00","14:30","15:00","15:30",
-  "16:00","16:30","17:00","17:30",
-  "18:00","18:30"
+  "10:00", "10:30", "11:00", "11:30",
+  "12:00", "12:30", "13:00", "13:30",
+  "14:00", "14:30", "15:00", "15:30",
+  "16:00", "16:30", "17:00", "17:30",
+  "18:00", "18:30"
 ];
 
 export default function SelectTime() {
   const navigate = useNavigate();
-  const { setSelectedBooking: setBooking } = useBooking();
-
+  const { setSelectedBooking } = useBooking();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState("");
@@ -47,7 +46,7 @@ export default function SelectTime() {
     return d < today;
   };
 
-  // Fetch available slots from backend when date changes
+  // Fetch available slots
   useEffect(() => {
     let ignore = false;
     async function loadSlots() {
@@ -56,10 +55,7 @@ export default function SelectTime() {
       setSelectedTime("");
       try {
         const res = await api(`/api/slots?date=${dateString}`);
-        if (!ignore) {
-          // res.available = times that are free
-          setAvailableTimes(res?.available || []);
-        }
+        if (!ignore) setAvailableTimes(res?.available || []);
       } catch (e) {
         if (!ignore) {
           setAvailableTimes([]);
@@ -76,25 +72,20 @@ export default function SelectTime() {
   const onSubmit = (e) => {
     e.preventDefault();
     if (!selectedTime) return;
-    setBooking({ date: dateString, time: selectedTime });
+    setSelectedBooking({ date: dateString, time: selectedTime });
     navigate("/details", { state: { date: dateString, time: selectedTime } });
   };
 
   return (
     <section className="max-w-6xl mx-auto px-4 py-10">
-      {/* two-column cards like image #1 */}
       <form
         onSubmit={onSubmit}
         className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
       >
-        {/* Left card — brand + selected info */}
+        {/* Left card */}
         <div className="card">
           <div className="flex items-center gap-3 mb-4">
-            <img
-              src="/logo.png"
-              alt="Best Barber logo"
-              className="h-12 w-12 rounded-full"
-            />
+            <img src="/logo.png" alt="Best Barber logo" className="h-12 w-12 rounded-full" />
             <div>
               <div className="text-xs uppercase tracking-wider text-gray-500 dark:text-slate-400">
                 BEST
@@ -105,12 +96,9 @@ export default function SelectTime() {
 
           <div className="space-y-2">
             <h3 className="font-semibold">Selected day</h3>
-            <p className="text-sm">
-              {dayjs(selectedDate).format("dddd D MMMM YYYY")}
-            </p>
+            <p className="text-sm">{dayjs(selectedDate).format("dddd D MMMM YYYY")}</p>
             <p className="muted text-sm">
-              First choose a date and time. You’ll select the service on the next
-              page.
+              First choose a date and time. You’ll select the service on the next page.
             </p>
             {selectedTime && (
               <p className="text-sm">
@@ -120,9 +108,8 @@ export default function SelectTime() {
           </div>
         </div>
 
-        {/* Right card — calendar + timezone + times */}
+        {/* Right card */}
         <div className="card">
-          {/* Header row (month header is inside Calendar; we add tz to the right) */}
           <div className="flex items-center justify-between mb-3">
             <div className="text-base font-semibold">
               {dayjs(selectedDate).format("MMMM")}{" "}
@@ -145,13 +132,8 @@ export default function SelectTime() {
 
           <div className="mt-2">
             <h4 className="font-semibold mb-2">Available times</h4>
-
-            {loadingSlots && (
-              <p className="text-sm text-gray-500 dark:text-slate-400">Loading…</p>
-            )}
-            {error && (
-              <p className="text-sm text-red-500 mb-2">{error}</p>
-            )}
+            {loadingSlots && <p className="text-sm text-gray-500 dark:text-slate-400">Loading…</p>}
+            {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
 
             {!loadingSlots && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -169,7 +151,7 @@ export default function SelectTime() {
                         "disabled:opacity-40 disabled:cursor-not-allowed",
                         isSelected
                           ? "bg-blue-600 text-white border-transparent"
-                          : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-slate-700"
+                          : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-slate-700",
                       ].join(" ")}
                     >
                       {time}
@@ -184,7 +166,7 @@ export default function SelectTime() {
             type="submit"
             className={[
               "btn w-full mt-6",
-              !selectedTime ? "opacity-60 cursor-not-allowed" : ""
+              !selectedTime ? "opacity-60 cursor-not-allowed" : "",
             ].join(" ")}
             disabled={!selectedTime}
           >
