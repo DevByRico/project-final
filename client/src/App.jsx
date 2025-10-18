@@ -1,4 +1,3 @@
-// client/src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
@@ -11,7 +10,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      basename="/"
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <Header />
       <Routes>
         <Route path="/" element={<SelectTime />} />
