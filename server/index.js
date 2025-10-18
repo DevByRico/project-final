@@ -13,7 +13,7 @@ dotenv.config();
 
 // ---- App setup ----
 const app = express();
-app.set("trust proxy", true); // ✅ final fix for Render proxy warning
+app.set("trust proxy", 1); // ✅ final fix for Render proxy warning
 
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
